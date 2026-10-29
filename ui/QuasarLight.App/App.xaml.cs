@@ -34,7 +34,7 @@ namespace QuasarLight
                 catch (Win32Exception) { /* UAC declined: continue without admin (GPU + preview still work) */ }
             }
             _single = new Mutex(true, "QuasarLight.SingleInstance", out bool first);
-            if (!first) { Shutdown(); return; }
+            if (!first && Array.IndexOf(e.Args, "--allow-multiple") < 0) { Shutdown(); return; }  // --allow-multiple: for screenshots/dev
 
             try
             {
