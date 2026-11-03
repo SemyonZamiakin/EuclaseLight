@@ -1,0 +1,12 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  core:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build C++ core and run tests
+        shell: pwsh
+        run: ./build-core.ps1

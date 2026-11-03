@@ -1,106 +1,100 @@
-<div align="center">
+# Quasar Light
 
-# ✨ Quasar Light
+Control panel for RGB lighting on Windows: graphics card, RAM, motherboard and any other device supported by [OpenRGB](https://openrgb.org). C++17 core with a WPF front end.
 
-**One lightweight, open-source control panel for everything on your PC that glows.**
-Graphics card · RAM · motherboard · and any other device [OpenRGB](https://openrgb.org) can drive.
+![platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-informational)
+![core](https://img.shields.io/badge/core-C%2B%2B17-informational)
+![ui](https://img.shields.io/badge/UI-WPF%20.NET%2010-informational)
+![license](https://img.shields.io/badge/license-MIT-blue)
 
-![platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-4C8DFF)
-![core](https://img.shields.io/badge/core-C%2B%2B17-5FD18A)
-![ui](https://img.shields.io/badge/UI-WPF%20.NET%2010-8B6CFF)
-![tests](https://img.shields.io/badge/core%20tests-46%20checks-E0A64A)
-![license](https://img.shields.io/badge/license-MIT-lightgrey)
+<img src="docs/app_shot.png" width="820" alt="Quasar Light main window">
 
-<img src="docs/app_shot.png" width="820" alt="Quasar Light">
+## Overview
 
-<sub>Live preview of the GPU, RAM and board lighting with a hardware status badge on every device.</sub>
+Each hardware vendor ships its own RGB suite, and the suites compete for the same buses. Quasar Light is a single small application that:
 
-</div>
+- detects the GPU (name, VRAM, driver), RAM modules (slot, manufacturer, part number, speed) and the motherboard, without installing a driver;
+- renders a live preview of the selected effect;
+- sends the effect to the real hardware through the OpenRGB SDK server, and shows a **LIVE** or **PREVIEW** badge on every device.
 
----
+Quasar Light does not implement device protocols itself. Hardware support is exactly the hardware support of OpenRGB.
 
-## Why Quasar Light
+### Features
 
-Every vendor ships its own heavy RGB suite and they fight over the same hardware. Quasar Light is a **single small utility**:
-detects your GPU, RAM and motherboard, shows a live animated preview, and sends the effect to the real hardware.
+- Six effects computed by the C++ engine: Static, Breathing, Rainbow Wave, Spectrum Cycle, Comet, Sparkle. Colour, speed, brightness and direction are adjustable.
+- Any other device exposed by OpenRGB (keyboards, mice, LED strips, coolers) appears as its own card.
+- A custom photo can be assigned to each device.
+- *Restore* returns the device to the mode it had before Quasar Light changed it.
+- Memory and motherboard buses are accessed only through OpenRGB, behind a write-protection layer for SPD addresses (see [Safe bus scanning](docs/SAFE_SCANNING.md)).
+- Tray icon, single instance, settings in `%APPDATA%\QuasarLight\settings.json`, no telemetry.
 
-- 🔍 **Auto-detection** of GPU (name, VRAM, driver), RAM modules (slot, maker, part, speed) and motherboard, no driver needed
-- 🎨 **6 effects** computed by a C++ engine: Static, Breathing, Rainbow Wave, Spectrum Cycle, Comet, Sparkle, plus colour, speed, brightness, direction
-- 🔌 **Real hardware control** through OpenRGB, with a green **LIVE** badge on every linked device
-- 🧩 **Any other OpenRGB device** (keyboards, mice, strips, coolers…) appears automatically as its own card
-- 🖼️ **Your own photo** for each device (*Set image…*), shown with a glow that follows the effect
-- 🛡️ **Safety first**: memory and board are only ever driven through OpenRGB; *Restore* puts the original mode back
-- 🧷 Tray icon, single instance, settings in `%APPDATA%\QuasarLight\settings.json`, no telemetry
+## Installation
 
-## Install
+1. Download `QuasarLight-<version>-win-x64.zip` from [Releases](../../releases) and unpack it. A .NET installation is not required.
+2. Start `QuasarLight.exe` and accept the UAC prompt (required for RAM and motherboard access).
+3. Press **Connect OpenRGB**. If OpenRGB is not installed, Quasar Light offers to download the official release and verifies its pinned SHA-256 checksum before use.
+4. RAM and motherboard only: install the free **PawnIO** driver from [pawnio.eu](https://pawnio.eu) and stop other RGB software (see below).
+5. Choose an effect and press **Apply to hardware**, or enable *Auto-apply changes*.
 
-1. Download **`QuasarLight-<version>-win-x64.zip`** from the [Releases](../../releases) page and unzip it anywhere.
-   *No .NET install needed.*
-2. Run **`QuasarLight.exe`** and accept the Windows **UAC** prompt (needed for memory and motherboard).
-3. Press **Connect OpenRGB**. If OpenRGB is not installed, Quasar Light offers to download the official release
-   and verifies its SHA-256 checksum before using it.
-4. **Memory and motherboard only:** install the free **PawnIO** driver from [pawnio.eu](https://pawnio.eu)
-   (there is a button in the app) and stop other RGB software, see below.
-5. Pick an effect and press **Apply to hardware** (or tick *Auto-apply changes*).
+Graphics cards and USB devices work without PawnIO and without administrator rights.
 
-> Graphics cards and USB devices work **without** PawnIO and without administrator rights.
+The release is not code-signed yet. Windows SmartScreen may warn about an unknown publisher; verify the SHA-256 on the release page or build from source.
 
-## ⚠️ If something doesn't work, read this first
+## Troubleshooting
 
-| Symptom | Cause and fix |
+| Symptom | Cause and remedy |
 |---|---|
-| **RAM / motherboard missing, or they don't change** | 1) Install **PawnIO** ([pawnio.eu](https://pawnio.eu)), then restart Quasar Light. 2) Run as administrator: accept the UAC prompt. 3) **Stop other RGB software** that holds the same bus (see next row). |
-| **MSI Center / Mystic Light open or running** | Closing the window is not enough: **exit it from the tray and stop its services** in `services.msc`: `Mystic_Light_Service`, `MSI_Central_Service`. The same applies to **Armoury Crate / Aura**, **iCUE**, **Razer Synapse**, **NZXT CAM**, **SignalRGB**, **Gigabyte RGB Fusion / Aorus Engine**, **HyperX NGENUITY**, **Corsair/Kingston** tools. Two programs on one bus cause missing devices and flicker. |
-| **GPU not listed or won't change** | Close vendor GPU RGB tools (Aorus Engine, Afterburner RGB, ROG GPU Tweak…). Check that the card is in OpenRGB's [supported list](https://openrgb.org): not every card is. Update the NVIDIA/AMD driver. |
-| **"Connect OpenRGB" can't connect** | Another `OpenRGB.exe` may be running with different settings: end it in Task Manager and try again. OpenRGB's SDK server must listen on `127.0.0.1:6742` (loopback only). Allow it if your firewall asks. |
-| **Windows SmartScreen warns about the exe** | The release is **not code-signed** yet. Click *More info → Run anyway*, or verify the SHA-256 from the release page. The full source is in this repo. |
-| **Antivirus flags it** | Hardware-access drivers (PawnIO) and RGB tools are commonly flagged as false positives. Review the source or build it yourself. |
-| **Effect looks different on the device** | Devices use their **built-in** modes. If one lacks an effect (e.g. Comet), Quasar Light shows the primary colour statically and says so in the status bar. |
-| **Colour resets after reboot** | Many devices don't store a static colour. Re-apply after boot (autostart is on the roadmap). |
-| **Still stuck?** | Check OpenRGB's log in `%APPDATA%\OpenRGB\logs`. Lines like `Permission Denied` mean not elevated; `Could not open PawnIO` means the driver is missing. Then [open an issue](../../issues) and attach the log, your GPU / RAM / board model. |
+| RAM or motherboard is missing, or does not change | 1) Install PawnIO and restart Quasar Light. 2) Run as administrator. 3) Stop other RGB software that holds the same bus (next row). |
+| MSI Center / Mystic Light is installed | Closing its window is not enough. Exit it from the tray and stop its services in `services.msc`: `Mystic_Light_Service`, `MSI_Central_Service`. The same applies to Armoury Crate / Aura, iCUE, Razer Synapse, NZXT CAM, SignalRGB, Gigabyte RGB Fusion / Aorus Engine, HyperX NGENUITY and Corsair / Kingston tools. Two programs on one bus cause missing devices and flicker. |
+| GPU is not listed or does not change | Close vendor GPU RGB tools (Aorus Engine, Afterburner RGB, ROG GPU Tweak). Check the card against the OpenRGB supported-devices list. Update the graphics driver. |
+| "Connect OpenRGB" cannot connect | Another `OpenRGB.exe` may be running with different settings; end it and retry. The OpenRGB SDK server must listen on `127.0.0.1:6742`. |
+| Antivirus flags the program | Hardware-access drivers and RGB tools are commonly reported as false positives. Review the source or build it yourself. |
+| Effect differs on the device | Devices use their built-in modes. If a mode is missing (for example Comet), Quasar Light shows the primary colour statically and reports it in the status bar. |
+| Colour resets after reboot | Many devices do not store a static colour. Re-apply after boot; autostart is on the roadmap. |
+| Still failing | Check the OpenRGB log in `%APPDATA%\OpenRGB\logs`. `Permission Denied` means the process is not elevated; `Could not open PawnIO` means the driver is missing. Then [open an issue](../../issues) with the log and your GPU, RAM and board models. |
 
-## What works today (honest status)
+## Status
 
-| Area | Status |
+| Area | State |
 |---|---|
-| Detection of GPU / RAM / board | ✅ implemented, tested on the author's PC |
-| C++ core (effects, OpenRGB protocol, bus-safety layer) | ✅ 46 automated checks |
-| OpenRGB 1.1 SDK client (protocol 3) | ✅ verified against a live server |
-| Gigabyte GTX 1080 Ti Xtreme (no extra driver) | ✅ verified by the author |
-| HyperX Predator RGB RAM + MSI MPG Z390 Gaming Plus (with PawnIO) | ✅ reported working by the author on one PC |
-| Other hardware | ❔ works **if OpenRGB supports it**. Reports welcome |
-| Autostart with Windows, profiles, per-LED editor | 🛠️ roadmap |
+| Detection of GPU, RAM and motherboard | Implemented; tested on one PC (author's) |
+| C++ core: effects, OpenRGB protocol, bus-safety layer | 46 automated checks |
+| OpenRGB 1.1 SDK client (protocol 3) | Verified against a live server |
+| Gigabyte GTX 1080 Ti Xtreme (no extra driver) | Verified on the author's PC |
+| HyperX Predator RGB RAM and MSI MPG Z390 Gaming Plus (with PawnIO) | Working on one PC; not tested elsewhere |
+| Other hardware | Expected to work if OpenRGB supports it; reports welcome |
+| Autostart, profiles, per-LED editor | Roadmap |
 
-Quasar Light does **not** ship its own device protocols yet; it is a fast, clean front-end for OpenRGB's hardware support.
-
-## How it works
+## Architecture
 
 ```mermaid
 flowchart LR
-    UI["WPF UI<br/>preview · controls · tray"] -- "C ABI (P/Invoke)" --> Core
+    UI["WPF UI<br/>preview, controls, tray"] -- "C ABI (P/Invoke)" --> Core
     subgraph Core["C++ core (qlcore.dll)"]
         D[Detection<br/>registry + SMBIOS]
         E[Effects engine]
         C[OpenRGB client]
-        G[Guarded bus<br/>SPD write-protect]
+        G[Guarded bus<br/>SPD write protection]
     end
     C -- "TCP 127.0.0.1:6742" --> O[OpenRGB server]
-    O --> H1[GPU via NVIDIA driver]
+    O --> H1[GPU via vendor driver]
     O --> H2[RAM / board via PawnIO]
     O --> H3[USB devices]
 ```
 
-More detail: [Architecture](docs/ARCHITECTURE.md) · [Safe bus scanning](docs/SAFE_SCANNING.md)
+Details: [Architecture](docs/ARCHITECTURE.md), [Safe bus scanning](docs/SAFE_SCANNING.md).
+
+Security-relevant decisions: the OpenRGB download is pinned to a fixed release and SHA-256 and extracted with a path-traversal guard; the OpenRGB connection is loopback only; writes to protected SPD address ranges are blocked unless explicitly granted. See [SECURITY.md](SECURITY.md).
 
 ## Build from source
 
-Requires Windows x64, **MSYS2 mingw64 `g++`** and **.NET SDK 10**.
+Requirements: Windows x64, MSYS2 mingw64 `g++`, .NET SDK 10.
 
 ```powershell
-./package.ps1                     # core + tests + dist/QuasarLight-<version>-win-x64.zip
+./package.ps1                     # core, tests, dist/QuasarLight-<version>-win-x64.zip
 ```
 
-Development run (skips the UAC prompt, so GPU/USB only):
+Development run (no UAC prompt, so GPU and USB devices only):
 
 ```powershell
 ./build-core.ps1
@@ -109,20 +103,16 @@ dotnet build -c Release -p:Platform=x64
 ./bin/x64/Release/net10.0-windows/QuasarLight.exe --no-elevate
 ```
 
+CI builds the C++ core and runs its test suite on every push.
+
 ## Roadmap
 
-Autostart & tray-only mode · profiles · per-LED editor · native plugins for devices OpenRGB lacks · low-RAM background service · code signing.
+Autostart and tray-only mode, profiles, per-LED editor, native plugins for devices OpenRGB does not cover, low-memory background service, code signing.
 
-<details>
-<summary><b>🇷🇺 Коротко по-русски</b></summary>
+## Краткое описание
 
-**Quasar Light** показывает ваши видеокарту, память и плату, рисует живое превью подсветки и управляет реальным железом через OpenRGB.
+Quasar Light показывает видеокарту, память и материнскую плату, рисует превью подсветки и управляет реальным железом через OpenRGB. Установка: скачать zip из Releases, запустить `QuasarLight.exe` с правами администратора, нажать «Connect OpenRGB» (при необходимости приложение скачает OpenRGB и проверит хэш). Для памяти и платы нужен драйвер PawnIO. Если не работает: остановите службы других RGB-программ (MSI Center / Mystic Light, Armoury Crate, iCUE, Synapse, SignalRGB и т. д.) и запустите от администратора. Видеокарты и USB-устройства работают без PawnIO и без прав администратора.
 
-**Установка:** скачайте zip из Releases → запустите `QuasarLight.exe` и подтвердите UAC → «Connect OpenRGB» (при необходимости приложение само скачает OpenRGB с проверкой хэша) → для памяти и платы поставьте драйвер **PawnIO** (pawnio.eu).
+## Contributing and licensing
 
-**Если не работает:** закройте и **остановите службы** других RGB-программ (MSI Center / Mystic Light: `Mystic_Light_Service`, `MSI_Central_Service`; Armoury Crate, iCUE, Synapse, SignalRGB и т. д.), запустите от администратора, установите PawnIO. Видеокарты и USB-устройства работают без PawnIO и без админ-прав. Подробности в таблице выше.
-</details>
-
-## License
-
-MIT. [OpenRGB](https://openrgb.org) is GPL-2.0 and is used only as a separate process. PawnIO is a separate driver by its authors.
+See [CONTRIBUTING.md](CONTRIBUTING.md). MIT license. [OpenRGB](https://openrgb.org) is GPL-2.0 and is used only as a separate process; PawnIO is a separate driver by its authors.
