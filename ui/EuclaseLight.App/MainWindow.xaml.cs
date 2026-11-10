@@ -13,7 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
-namespace QuasarLight
+namespace EuclaseLight
 {
     public partial class MainWindow : Window
     {
@@ -37,7 +37,7 @@ namespace QuasarLight
         private readonly Dictionary<string, EffectSettings> _savedSettings = new Dictionary<string, EffectSettings>();
         private readonly Dictionary<string, string> _savedImages = new Dictionary<string, string>();
         private static readonly string SettingsPath =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuasarLight", "settings.json");
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EuclaseLight", "settings.json");
 
         public MainWindow()
         {
@@ -176,7 +176,7 @@ namespace QuasarLight
         }
 
         private static readonly string ImageDir =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuasarLight", "images");
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EuclaseLight", "images");
 
         private void ShowView(DeviceVm d)
         {
@@ -376,7 +376,7 @@ namespace QuasarLight
                 var ask = System.Windows.MessageBox.Show(this,
                     $"OpenRGB was not found.\n\nDownload OpenRGB {OpenRgbInstaller.Version} (about 22 MB) from the official repository\n" +
                     "codeberg.org/OpenRGB/OpenRGB and verify its SHA-256 checksum?\n\nOpenRGB is a separate GPL-2.0 program that does the actual hardware access.",
-                    "Quasar Light - OpenRGB", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+                    "Euclase Light - OpenRGB", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
                 if (ask == MessageBoxResult.Cancel) { SetBackendState(false, "OpenRGB: not running"); return; }
                 if (ask == MessageBoxResult.Yes)
                 {
@@ -586,7 +586,7 @@ namespace QuasarLight
             Native.ql_orgb_disconnect();
         }
 
-        // ---------- persistence (%APPDATA%\QuasarLight\settings.json) ----------
+        // ---------- persistence (%APPDATA%\EuclaseLight\settings.json) ----------
         private sealed class SavedState
         {
             public bool Sync { get; set; } = true;

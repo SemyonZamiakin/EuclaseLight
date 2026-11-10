@@ -31,7 +31,7 @@
 
 The preview/effect pipeline is complete and tested. Hardware output goes through the **OpenRGB backend**
 (`core/src/openrgb.cpp`): a TCP client for the OpenRGB SDK server on loopback (protocol 3). OpenRGB owns the
-drivers and per-vendor protocols; Quasar Light owns the UI, effects and settings. Device matching is by OpenRGB
+drivers and per-vendor protocols; Euclase Light owns the UI, effects and settings. Device matching is by OpenRGB
 device type (GPU / DRAM / motherboard). Without a running server the UI stays in preview mode.
 
 Native drivers (own SMBus transport + plugins behind `GuardedBus`) remain an option for devices OpenRGB cannot reach.
@@ -42,7 +42,7 @@ Native drivers (own SMBus transport + plugins behind `GuardedBus`) remain an opt
 core/include/ql/   public headers (bus, guard, effects, sysinfo, qlcore C ABI)
 core/src/          implementation
 core/tests/        host tests incl. simulated SMBus
-ui/QuasarLight.App WPF app (net10.0-windows, x64)
+ui/EuclaseLight.App WPF app (net10.0-windows, x64)
 build-core.ps1     builds qlcore.dll + runs core tests
 docs/              architecture, safety, screenshot
 ```

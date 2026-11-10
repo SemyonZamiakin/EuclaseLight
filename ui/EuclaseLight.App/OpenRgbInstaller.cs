@@ -6,10 +6,10 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace QuasarLight
+namespace EuclaseLight
 {
     /// <summary>
-    /// Downloads the official portable OpenRGB release (never bundled with Quasar Light) and verifies its SHA-256
+    /// Downloads the official portable OpenRGB release (never bundled with Euclase Light) and verifies its SHA-256
     /// before extracting. The hash is pinned in code, so a tampered or swapped download is rejected.
     /// </summary>
     internal static class OpenRgbInstaller
@@ -20,7 +20,7 @@ namespace QuasarLight
         public const long ApproxBytes = 22_019_605;
 
         public static string InstallDir => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "QuasarLight", "OpenRGB");
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EuclaseLight", "OpenRGB");
 
         public static string? InstalledExe()
         {
@@ -30,7 +30,7 @@ namespace QuasarLight
 
         public static async Task<string> DownloadAsync(IProgress<int> percent, CancellationToken ct)
         {
-            string tmp = Path.Combine(Path.GetTempPath(), "QuasarLight_openrgb_" + Guid.NewGuid().ToString("N") + ".zip");
+            string tmp = Path.Combine(Path.GetTempPath(), "EuclaseLight_openrgb_" + Guid.NewGuid().ToString("N") + ".zip");
             try
             {
                 using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) })

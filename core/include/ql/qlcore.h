@@ -1,4 +1,4 @@
-/* Quasar Light core - stable C ABI used by the UI (P/Invoke) and any other front-end. */
+/* Euclase Light core - stable C ABI used by the UI (P/Invoke) and any other front-end. */
 #pragma once
 #include <stdint.h>
 

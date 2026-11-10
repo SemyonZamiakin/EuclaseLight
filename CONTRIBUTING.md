@@ -1,4 +1,4 @@
-# Contributing to Quasar Light
+# Contributing to Euclase Light
 
 Thanks for your interest. Bug reports, hardware test reports and focused pull requests are welcome.
 

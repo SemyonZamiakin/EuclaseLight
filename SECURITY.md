@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Only the latest release of Quasar Light receives security fixes.
+Only the latest release of Euclase Light receives security fixes.
 
 ## Reporting a vulnerability
 

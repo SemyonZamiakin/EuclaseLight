@@ -1,4 +1,4 @@
-// Client for the OpenRGB SDK server (TCP 6742). Quasar Light talks to OpenRGB over the network only,
+// Client for the OpenRGB SDK server (TCP 6742). Euclase Light talks to OpenRGB over the network only,
 // so OpenRGB's GPL code is never linked into this MIT project.
 // Wire format implemented: SDK protocol version 3 (negotiated down from newer servers).
 #pragma once

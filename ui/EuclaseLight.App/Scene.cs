@@ -7,14 +7,14 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 
-namespace QuasarLight
+namespace EuclaseLight
 {
     internal sealed class EffectSettings
     {
         public int Type { get; set; } = 2;  // Rainbow Wave
         public double Speed { get; set; } = 0.5;
         public double Brightness { get; set; } = 1.0;
-        public uint Color1 { get; set; } = 0x8B6CFF;
+        public uint Color1 { get; set; } = 0x2DD4BF;
         public uint Color2 { get; set; } = 0x38D9F0;
         public bool Reverse { get; set; }
 
@@ -86,22 +86,22 @@ namespace QuasarLight
             // motherboard backdrop
             var board = new Rectangle { Width = 600, Height = 420, RadiusX = 20, RadiusY = 20,
                 Fill = new LinearGradientBrush(Color.FromRgb(0x14, 0x17, 0x24), Color.FromRgb(0x0C, 0x0E, 0x17), 90),
-                Stroke = B("#222740"), StrokeThickness = 1.5 };
+                Stroke = B("#1F4251"), StrokeThickness = 1.5 };
             Canvas.SetLeft(board, 10); Canvas.SetTop(board, 10);
             stage.Children.Add(board);
             for (int i = 0; i < 9; i++)  // decorative traces
             {
-                var l = new Line { X1 = 240, Y1 = 40 + i * 22, X2 = 320, Y2 = 40 + i * 22, Stroke = B("#1A1F33"), StrokeThickness = 1.2 };
+                var l = new Line { X1 = 240, Y1 = 40 + i * 22, X2 = 320, Y2 = 40 + i * 22, Stroke = B("#143440"), StrokeThickness = 1.2 };
                 stage.Children.Add(l);
             }
 
             // CPU block (decorative) + board ring
             var cpu = new Rectangle { Width = 150, Height = 150, RadiusX = 18, RadiusY = 18,
                 Fill = new LinearGradientBrush(Color.FromRgb(0x1D, 0x21, 0x33), Color.FromRgb(0x12, 0x14, 0x20), 45),
-                Stroke = B("#2A2F48") };
+                Stroke = B("#24505F") };
             Canvas.SetLeft(cpu, 50); Canvas.SetTop(cpu, 50);
             stage.Children.Add(cpu);
-            var cpuTxt = new TextBlock { Text = "CPU", Foreground = B("#3A405C"), FontSize = 20, FontWeight = FontWeights.Bold };
+            var cpuTxt = new TextBlock { Text = "CPU", Foreground = B("#2F6070"), FontSize = 20, FontWeight = FontWeights.Bold };
             Canvas.SetLeft(cpuTxt, 100); Canvas.SetTop(cpuTxt, 113);
             stage.Children.Add(cpuTxt);
 
@@ -135,7 +135,7 @@ namespace QuasarLight
                     double x = x0 + s * 56, y = 36;
                     var body = new Rectangle { Width = 42, Height = 214, RadiusX = 6, RadiusY = 6,
                         Fill = new LinearGradientBrush(Color.FromRgb(0x26, 0x2A, 0x3C), Color.FromRgb(0x14, 0x16, 0x22), 0),
-                        Stroke = B("#323852") };
+                        Stroke = B("#2A5868") };
                     Canvas.SetLeft(body, x); Canvas.SetTop(body, y);
                     stage.Children.Add(body);
                     var pins = new Rectangle { Width = 42, Height = 6, Fill = B("#8C7A3A"), Opacity = .6 };
@@ -252,7 +252,7 @@ namespace QuasarLight
         {
             var shell = new Rectangle { Width = 560, Height = 150, RadiusX = 16, RadiusY = 16,
                 Fill = new LinearGradientBrush(Color.FromRgb(0x24, 0x28, 0x3A), Color.FromRgb(0x10, 0x12, 0x1C), 90),
-                Stroke = B("#343A58"), StrokeThickness = 1.4 };
+                Stroke = B("#2D5E6E"), StrokeThickness = 1.4 };
             Canvas.SetLeft(shell, 30); Canvas.SetTop(shell, 262);
             stage.Children.Add(shell);
 
@@ -264,7 +264,7 @@ namespace QuasarLight
             foreach (double cx in fx)
             {
                 double cy = 345;
-                var housing = new Ellipse { Width = 132, Height = 132, Fill = B("#0B0D15"), Stroke = B("#2B3050"), StrokeThickness = 1.5 };
+                var housing = new Ellipse { Width = 132, Height = 132, Fill = B("#07191F"), Stroke = B("#244E5C"), StrokeThickness = 1.5 };
                 Canvas.SetLeft(housing, cx - 66); Canvas.SetTop(housing, cy - 66);
                 stage.Children.Add(housing);
 
@@ -280,19 +280,19 @@ namespace QuasarLight
                     var blade = new Polygon
                     {
                         Points = new PointCollection { new Point(0, 0), new Point(20, -6), new Point(46, -22), new Point(52, -6), new Point(24, 6) },
-                        Fill = B("#1B1F30"), Stroke = B("#2C3250"), StrokeThickness = 0.8,
+                        Fill = B("#133340"), Stroke = B("#265260"), StrokeThickness = 0.8,
                         RenderTransform = new RotateTransform(k * 40)
                     };
                     blades.Children.Add(blade);
                 }
-                var hub = new Ellipse { Width = 26, Height = 26, Fill = B("#0E1018"), Stroke = B("#343A58") };
+                var hub = new Ellipse { Width = 26, Height = 26, Fill = B("#08202A"), Stroke = B("#2D5E6E") };
                 Canvas.SetLeft(hub, -13); Canvas.SetTop(hub, -13);
                 blades.Children.Add(hub);
                 stage.Children.Add(blades);
             }
 
             string label = name.Replace("NVIDIA ", "").Replace("GeForce ", "").ToUpperInvariant();
-            var t = new TextBlock { Text = label, Foreground = B("#59607F"), FontSize = 12, FontWeight = FontWeights.Bold,
+            var t = new TextBlock { Text = label, Foreground = B("#4D7886"), FontSize = 12, FontWeight = FontWeights.Bold,
                 TextAlignment = TextAlignment.Center, Width = 140 };
             Canvas.SetLeft(t, 220); Canvas.SetTop(t, 336);
             stage.Children.Add(t);

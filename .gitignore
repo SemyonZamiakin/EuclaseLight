@@ -1,6 +1,6 @@
 ui/**/bin/
 ui/**/obj/
-ui/QuasarLight.App/native/
+ui/EuclaseLight.App/native/
 core/tests/*.exe
 *.exe
 tools/

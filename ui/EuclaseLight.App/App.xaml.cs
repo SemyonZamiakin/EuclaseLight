@@ -7,7 +7,7 @@ using System.Threading;
 using System.Windows;
 using Forms = System.Windows.Forms;
 
-namespace QuasarLight
+namespace EuclaseLight
 {
     public partial class App : System.Windows.Application
     {
@@ -33,7 +33,7 @@ namespace QuasarLight
                 }
                 catch (Win32Exception) { /* UAC declined: continue without admin (GPU + preview still work) */ }
             }
-            _single = new Mutex(true, "QuasarLight.SingleInstance", out bool first);
+            _single = new Mutex(true, "EuclaseLight.SingleInstance", out bool first);
             if (!first && Array.IndexOf(e.Args, "--allow-multiple") < 0) { Shutdown(); return; }  // --allow-multiple: for screenshots/dev
 
             try
@@ -44,7 +44,7 @@ namespace QuasarLight
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show("Quasar Light could not start:\n" + ex.Message, "Quasar Light",
+                System.Windows.MessageBox.Show("Euclase Light could not start:\n" + ex.Message, "Euclase Light",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
                 return;
@@ -57,7 +57,7 @@ namespace QuasarLight
         private void BuildTray()
         {
             var menu = new Forms.ContextMenuStrip();
-            menu.Items.Add("Open Quasar Light", null, (_, __) => ShowWindow());
+            menu.Items.Add("Open Euclase Light", null, (_, __) => ShowWindow());
             menu.Items.Add(new Forms.ToolStripSeparator());
             int n = Native.ql_effect_count();
             for (int i = 0; i < n; i++)
@@ -68,7 +68,7 @@ namespace QuasarLight
             menu.Items.Add(new Forms.ToolStripSeparator());
             menu.Items.Add("Exit", null, (_, __) => ExitApp());
 
-            _tray = new Forms.NotifyIcon { Icon = MakeIcon(), Text = "Quasar Light", Visible = true, ContextMenuStrip = menu };
+            _tray = new Forms.NotifyIcon { Icon = MakeIcon(), Text = "Euclase Light", Visible = true, ContextMenuStrip = menu };
             _tray.MouseClick += (_, a) => { if (a.Button == Forms.MouseButtons.Left) ShowWindow(); };
         }
 

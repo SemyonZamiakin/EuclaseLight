@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
-namespace QuasarLight
+namespace EuclaseLight
 {
     /// <summary>P/Invoke surface of qlcore.dll (see core/include/ql/qlcore.h).</summary>
     internal static class Native

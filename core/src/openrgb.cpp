@@ -222,7 +222,7 @@ bool OpenRgbClient::connect(const std::string& host, uint16_t port, int timeoutM
 
     // 2. name
     std::vector<uint8_t> name;
-    const char* nm = "Quasar Light";
+    const char* nm = "Euclase Light";
     name.assign(nm, nm + strlen(nm) + 1);
     send(0, PKT_SET_CLIENT_NAME, name);
 
