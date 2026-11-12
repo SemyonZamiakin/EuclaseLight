@@ -1,5 +1,9 @@
 #include "ql/effects.h"
 #include "ql/guard.h"
+#include "ql/metrics_wire.h"
+#include "ql/monitor_link.h"
+#include "../third_party/corundum/corundum.h"
+#include <cmath>
 #include "ql/openrgb.h"
 #include "ql/qlcore.h"
 #include "ql/sysinfo.h"
@@ -104,7 +108,7 @@ static void test_smbios() {
 }
 
 static void test_capi() {
-    CHECK(ql_abi_version() == 1);
+    CHECK(ql_abi_version() == 2);
     CHECK(ql_effect_count() == int(ql::EffectType::Count));
     const char* j = ql_system_json();
     CHECK(j && j[0] == '{' && strstr(j, "\"gpus\"") && strstr(j, "\"ram\""));
@@ -154,12 +158,71 @@ static void test_openrgb() {
     CHECK(ql_orgb_connect(0) == -1);
 }
 
+// Builds an EMS1 snapshot the way Euclase Monitor does (numbers and one string).
+static std::vector<uint8_t> snapshot(uint64_t seq, uint64_t ms, double cpu, double gpu, double temp) {
+    std::vector<uint8_t> v = {'E', 'M', 'S', '1'};
+    put32(v, 4);
+    for (int i = 0; i < 8; ++i) v.push_back(uint8_t(seq >> (8 * i)));
+    for (int i = 0; i < 8; ++i) v.push_back(uint8_t(ms >> (8 * i)));
+    auto num = [&](const char* n, double d) {
+        v.push_back(0); v.push_back(uint8_t(strlen(n))); put16(v, 8);
+        v.insert(v.end(), n, n + strlen(n));
+        uint8_t b[8]; memcpy(b, &d, 8); v.insert(v.end(), b, b + 8);
+    };
+    num("cpu.load", cpu); num("gpu.load", gpu); num("gpu.temp", temp);
+    const char* s = "Test GPU";
+    v.push_back(1); v.push_back(8); put16(v, uint16_t(strlen(s)));
+    v.insert(v.end(), "gpu.name", "gpu.name" + 8); v.insert(v.end(), s, s + strlen(s));
+    return v;
+}
+
+static void test_monitor() {
+    // pure parts
+    ql::MonitorSample s;
+    auto snap = snapshot(3, 1000, 25, 80, NAN);
+    CHECK(ql::parseSnapshot(snap.data(), snap.size(), s));
+    CHECK(s.seq == 3 && s.unixMs == 1000 && s.cpuLoad == 25 && s.gpuLoad == 80 && s.gpuTemp == -1 && s.ramUsedPct == -1);
+    CHECK(!ql::parseSnapshot(snap.data(), snap.size() - 1, s));       // truncated
+    CHECK(ql::loadUnit(0, s) == 0.25 && ql::loadUnit(1, s) == 0.8 && ql::loadUnit(2, s) == -1 && ql::loadUnit(9, s) == -1);
+    s.gpuTemp = 90; CHECK(ql::loadUnit(2, s) == 1.0);
+    s.gpuTemp = 10; CHECK(ql::loadUnit(2, s) == 0.0);
+    CHECK(ql::lerpColor(0, 0x2DD4BF, 0xFF0000) == 0x2DD4BF && ql::lerpColor(1, 0x2DD4BF, 0xFF0000) == 0xFF0000);
+    CHECK(ql::lerpColor(0.5, 0x000000, 0xFF8040) == 0x804020 && ql::lerpColor(7, 0, 0x123456) == 0x123456);
+    double in4[4] = {50, -1, 60, 10};
+    CHECK(ql_load_unit(0, in4) == 0.5 && ql_load_unit(1, in4) == -1 && ql_load_unit(2, in4) == 0.5);
+    CHECK(ql_lerp_color(1, 1, 2) == 2);
+
+    // live: a writer (standing in for Euclase Monitor) and the link, through shared memory
+    const char* ring = "/euclase-monitor-lighttest";
+    CHECK(crd_create(ring, 64 * 1024, 0600, CRD_CREATE_REPLACE) == CRD_OK);
+    crd_writer w;
+    CHECK(crd_writer_open(&w, ring, 0) == CRD_OK);
+    ql::MonitorLink link(ring);
+    ql::MonitorSample got;
+    CHECK(!link.poll(got, 100000));                                     // attached, but nothing published yet
+    CHECK(link.attached());
+    for (int i = 0; i < 3; ++i) {
+        auto b = snapshot(uint64_t(i), 100000 + uint64_t(i), 10.0 * i, 5, 55);
+        CHECK(crd_write(&w, EMS_RECORD_SNAPSHOT, b.data(), uint32_t(b.size())) == CRD_OK);
+    }
+    CHECK(link.poll(got, 100100) && got.seq == 2 && got.cpuLoad == 20 && got.gpuTemp == 55);   // newest wins
+    CHECK(!link.poll(got, 100100 + 6000));                             // older than 5 s: stale
+    crd_writer_close(&w);                                               // Monitor exits
+    link.poll(got, 100200);
+    CHECK(!link.attached());
+    crd_unlink(ring);
+    ql::MonitorLink none("/euclase-monitor-not-running");
+    CHECK(!none.poll(got, 5000) && !none.attached());
+    CHECK(ql_orgb_set_color(0, 0xFF0000) == 0);                          // not connected: refused, no crash
+}
+
 int main() {
     test_guard();
     test_effects();
     test_smbios();
     test_capi();
     test_openrgb();
+    test_monitor();
     printf("%d checks, %d failed\n", g_run, g_fail);
     return g_fail ? 1 : 0;
 }

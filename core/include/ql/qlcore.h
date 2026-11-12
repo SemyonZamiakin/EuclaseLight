@@ -36,6 +36,18 @@ QL_API int ql_orgb_apply(int dev, int effect, float speed, float brightness, uin
 QL_API int ql_orgb_last_approx(void);
 QL_API int ql_orgb_restore(int dev);
 QL_API const char* ql_orgb_error(void);
+/* Live solid colour (0xRRGGBB) on device `dev` via its per-LED "Direct" mode; cheap enough for 10+ updates/s.
+   ql_orgb_restore puts the device back. Returns 1 on success, 0 on failure (see ql_orgb_error). */
+QL_API int ql_orgb_set_color(int dev, uint32_t rgb);
+
+/* ---- Euclase Monitor link (shared-memory ring, see metrics_wire.h). Call from the UI thread. ---- */
+/* Fills out[4] = {cpu load %, gpu load %, gpu temp C, ram used %} (-1 = not reported).
+   Returns 1 if Euclase Monitor is running and the data is younger than 5 s, else 0. */
+QL_API int ql_monitor_read(double* out4);
+/* 0..1 for source 0 CPU load, 1 GPU load, 2 GPU temperature (30..90 C), 3 RAM; -1 if unavailable. */
+QL_API double ql_load_unit(int source, const double* in4);
+/* Blend 0xRRGGBB colours: t = 0 gives c1, t = 1 gives c2. */
+QL_API uint32_t ql_lerp_color(double t, uint32_t c1, uint32_t c2);
 
 #ifdef __cplusplus
 }

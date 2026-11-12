@@ -27,6 +27,17 @@ Euclase Light does not implement device protocols itself. Hardware support is ex
 - *Restore* returns the device to the mode it had before Euclase Light changed it.
 - Memory and motherboard buses are accessed only through OpenRGB, behind a write-protection layer for SPD addresses (see [Safe bus scanning](docs/SAFE_SCANNING.md)).
 - Tray icon, single instance, settings in `%APPDATA%\EuclaseLight\settings.json`, no telemetry.
+- **New in 1.1: colour follows system load.** With [Euclase Monitor](https://github.com/SemyonZamiakin/EuclaseMonitor) 1.1 running, the lights blend from the Primary colour (idle) to the Secondary colour (full load) by CPU load, GPU load, GPU temperature or RAM use, 10 times per second. The metrics come over a [Corundum HFT](https://github.com/SemyonZamiakin/CorundumHFT) shared-memory ring, not HTTP polling.
+
+### Colour follows system load (1.1)
+
+1. Start Euclase Monitor 1.1 (its metrics ring is on by default).
+2. In Euclase Light, connect OpenRGB, then under **SYSTEM LOAD** turn on *Colour follows system load* and pick the source.
+3. Primary colour = idle, Secondary colour = full load (GPU temperature is mapped from 30 C to 90 C).
+
+The device is switched to its per-LED **Direct** mode once; after that only LED colours are sent, and only when the colour changes. *Restore* or turning the mode off brings back the previous effect. A device without a Direct mode in OpenRGB is reported in the status line.
+
+How it is built: Monitor encodes each metrics snapshot straight into the ring; Light's core (`qlcore.dll`) attaches as the reader, drains new snapshots on every UI tick and keeps the newest. Reading costs no system call, and if Monitor is closed or restarted Light notices within 5 seconds and re-attaches. Code: [core/src/monitor_link.cpp](core/src/monitor_link.cpp).
 
 ## Installation
 
@@ -58,7 +69,9 @@ The release is not code-signed yet. Windows SmartScreen may warn about an unknow
 | Area | State |
 |---|---|
 | Detection of GPU, RAM and motherboard | Implemented; tested on one PC (author's) |
-| C++ core: effects, OpenRGB protocol, bus-safety layer | 46 automated checks |
+| C++ core: effects, OpenRGB protocol, bus-safety layer, Monitor link | 68 automated checks |
+| Monitor link (reads Euclase Monitor 1.1 over shared memory) | Verified with the real Monitor exe on the author's PC |
+| Live colour through the Direct mode | Implemented; **not yet verified on hardware** (please report) |
 | OpenRGB 1.1 SDK client (protocol 3) | Verified against a live server |
 | Gigabyte GTX 1080 Ti Xtreme (no extra driver) | Verified on the author's PC |
 | HyperX Predator RGB RAM and MSI MPG Z390 Gaming Plus (with PawnIO) | Working on one PC; not tested elsewhere |
@@ -77,6 +90,8 @@ flowchart LR
         G[Guarded bus<br/>SPD write protection]
     end
     C -- "TCP 127.0.0.1:6742" --> O[OpenRGB server]
+    M["Euclase Monitor 1.1"] -- "Corundum ring<br/>(shared memory)" --> L[Monitor link]
+    L --> Core
     O --> H1[GPU via vendor driver]
     O --> H2[RAM / board via PawnIO]
     O --> H3[USB devices]
@@ -111,7 +126,7 @@ Autostart and tray-only mode, profiles, per-LED editor, native plugins for devic
 
 ## Краткое описание
 
-Euclase Light показывает видеокарту, память и материнскую плату, рисует превью подсветки и управляет реальным железом через OpenRGB. Установка: скачать zip из Releases, запустить `EuclaseLight.exe` с правами администратора, нажать «Connect OpenRGB» (при необходимости приложение скачает OpenRGB и проверит хэш). Для памяти и платы нужен драйвер PawnIO. Если не работает: остановите службы других RGB-программ (MSI Center / Mystic Light, Armoury Crate, iCUE, Synapse, SignalRGB и т. д.) и запустите от администратора. Видеокарты и USB-устройства работают без PawnIO и без прав администратора.
+Euclase Light показывает видеокарту, память и материнскую плату, рисует превью подсветки и управляет реальным железом через OpenRGB. Новое в 1.1: режим «Цвет по нагрузке». Если запущен Euclase Monitor 1.1, подсветка плавно меняет цвет от основного (простой) к дополнительному (полная нагрузка) по загрузке CPU, GPU, температуре GPU или занятой памяти, 10 раз в секунду. Метрики приходят через кольцевой буфер Corundum HFT в общей памяти, без HTTP-опроса. Установка: скачать zip из Releases, запустить `EuclaseLight.exe` с правами администратора, нажать «Connect OpenRGB» (при необходимости приложение скачает OpenRGB и проверит хэш). Для памяти и платы нужен драйвер PawnIO. Если не работает: остановите службы других RGB-программ (MSI Center / Mystic Light, Armoury Crate, iCUE, Synapse, SignalRGB и т. д.) и запустите от администратора. Видеокарты и USB-устройства работают без PawnIO и без прав администратора.
 
 ## Contributing and licensing
 

@@ -1,7 +1,9 @@
 #include "ql/qlcore.h"
 #include "ql/effects.h"
+#include "ql/monitor_link.h"
 #include "ql/openrgb.h"
 #include "ql/sysinfo.h"
+#include <chrono>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -51,7 +53,7 @@ ql::Rgb unpack(uint32_t c) { return {uint8_t(c >> 16), uint8_t(c >> 8), uint8_t(
 
 extern "C" {
 
-int ql_abi_version(void) { return 1; }
+int ql_abi_version(void) { return 2; }
 
 const char* ql_system_json(void) {
     static std::string cache;
@@ -129,5 +131,36 @@ int ql_orgb_apply(int dev, int effect, float speed, float brightness, uint32_t c
 int ql_orgb_last_approx(void) { return g_approx ? 1 : 0; }
 int ql_orgb_restore(int dev) { return dev >= 0 && g_orgb.restore(size_t(dev)) ? 1 : 0; }
 const char* ql_orgb_error(void) { return g_orgbErr.c_str(); }
+
+int ql_orgb_set_color(int dev, uint32_t rgb) {
+    if (dev < 0) return 0;
+    if (!g_orgb.setColor(size_t(dev), unpack(rgb))) { g_orgbErr = g_orgb.lastError(); return 0; }
+    return 1;
+}
+
+// ---------------- Euclase Monitor link ----------------
+namespace {
+ql::MonitorLink g_monitor;
+uint64_t unixMsNow() {
+    using namespace std::chrono;
+    return uint64_t(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+}
+}  // namespace
+
+int ql_monitor_read(double* out4) {
+    ql::MonitorSample s;
+    const bool ok = g_monitor.poll(s, unixMsNow());
+    if (out4) { out4[0] = s.cpuLoad; out4[1] = s.gpuLoad; out4[2] = s.gpuTemp; out4[3] = s.ramUsedPct; }
+    return ok ? 1 : 0;
+}
+
+double ql_load_unit(int source, const double* in4) {
+    if (!in4) return -1;
+    ql::MonitorSample s;
+    s.cpuLoad = in4[0]; s.gpuLoad = in4[1]; s.gpuTemp = in4[2]; s.ramUsedPct = in4[3];
+    return ql::loadUnit(source, s);
+}
+
+uint32_t ql_lerp_color(double t, uint32_t c1, uint32_t c2) { return ql::lerpColor(t, c1, c2); }
 
 }  // extern "C"

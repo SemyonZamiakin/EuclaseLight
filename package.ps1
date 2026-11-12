@@ -1,6 +1,6 @@
 # Builds a self-contained release zip: dist/EuclaseLight-<version>-win-x64.zip
 # (no .NET install needed on the target PC; OpenRGB is NOT bundled - the app downloads and verifies it).
-param([string]$Version = '0.1.0')
+param([string]$Version = '1.1.0')
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 & "$root\build-core.ps1"

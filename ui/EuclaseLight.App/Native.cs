@@ -33,7 +33,13 @@ namespace EuclaseLight
             return JsonSerializer.Deserialize<OrgbDev[]>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? Array.Empty<OrgbDev>();
         }
 
-        public const int AbiVersion = 1;
+        public const int AbiVersion = 2;
+
+        // ---- live colour + Euclase Monitor link (ABI 2) ----
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern int ql_orgb_set_color(int dev, uint rgb);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern int ql_monitor_read([Out] double[] out4);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern double ql_load_unit(int source, [In] double[] in4);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern uint ql_lerp_color(double t, uint c1, uint c2);
 
         public static string EffectName(int t) => Marshal.PtrToStringUTF8(ql_effect_name(t)) ?? "?";
 

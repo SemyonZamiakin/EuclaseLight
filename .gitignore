@@ -7,3 +7,4 @@ tools/
 core/tests/*.exe
 dist/
 build/
+core/third_party/corundum/*.o

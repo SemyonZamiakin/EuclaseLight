@@ -150,6 +150,18 @@
                                 </Grid>
 
                                 <Border Height="1" Background="{StaticResource Line}" Margin="0,14,0,14"/>
+                                <TextBlock Text="SYSTEM LOAD" Style="{StaticResource SectionLabel}"/>
+                                <CheckBox x:Name="LoadBox" Style="{StaticResource Toggle}" Content="Colour follows system load" Click="Load_Click"
+                                          ToolTip="Blends from the Primary colour (idle) to the Secondary colour (full load). Needs Euclase Monitor running."/>
+                                <ComboBox x:Name="LoadSource" Margin="0,10,0,0" SelectedIndex="0" SelectionChanged="LoadSource_Changed">
+                                    <ComboBoxItem Content="CPU load"/>
+                                    <ComboBoxItem Content="GPU load"/>
+                                    <ComboBoxItem Content="GPU temperature (30-90 C)"/>
+                                    <ComboBoxItem Content="RAM use"/>
+                                </ComboBox>
+                                <TextBlock x:Name="LoadStatus" Margin="0,8,0,0" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}"
+                                           Text="Reads live metrics from Euclase Monitor through shared memory (Corundum)."/>
+                                <Border Height="1" Background="{StaticResource Line}" Margin="0,14,0,14"/>
                                 <TextBlock Text="PARAMETERS" Style="{StaticResource SectionLabel}"/>
                                 <DockPanel>
                                     <TextBlock x:Name="SpeedVal" DockPanel.Dock="Right" Width="38" TextAlignment="Right" Foreground="{StaticResource MutedBrush}" FontFamily="Consolas"/>
@@ -166,6 +178,7 @@
                                 <TextBlock Text="OPTIONS" Style="{StaticResource SectionLabel}"/>
                                 <CheckBox x:Name="ReverseBox" Style="{StaticResource Toggle}" Content="Reverse direction" Click="Toggle_Click"/>
                                 <CheckBox x:Name="SyncBox" Style="{StaticResource Toggle}" Content="Apply to all devices" Margin="0,10,0,0" Click="Toggle_Click" IsChecked="True"/>
+
                             </StackPanel>
                         </ScrollViewer>
                     </DockPanel>
@@ -176,7 +189,7 @@
             <Border Grid.Row="2" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0">
                 <Grid Margin="14,0">
                     <TextBlock x:Name="StatusText" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
-                    <TextBlock Text="v0.1.0 · MIT" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource DimBrush}"/>
+                    <TextBlock Text="v1.1.0 · MIT" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource DimBrush}"/>
                 </Grid>
             </Border>
         </Grid>

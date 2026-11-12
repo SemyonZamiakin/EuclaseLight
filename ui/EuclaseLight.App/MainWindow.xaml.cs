@@ -31,6 +31,9 @@ namespace EuclaseLight
         private readonly DispatcherTimer _saveTimer;
         private readonly DispatcherTimer _applyTimer;
         private DispatcherTimer? _connectTimer;
+        private readonly DispatcherTimer _loadTimer;
+        private readonly double[] _load = new double[4];
+        private readonly Dictionary<int, uint> _sentColor = new Dictionary<int, uint>();   // OpenRGB device -> last live colour sent
         private bool _connected;
         private string _openRgbPath = "";
         private const int OrgbPort = 6742;
@@ -46,6 +49,8 @@ namespace EuclaseLight
             _saveTimer.Tick += (_, __) => { _saveTimer.Stop(); SaveSettings(); };
             _applyTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
             _applyTimer.Tick += (_, __) => { _applyTimer.Stop(); ApplyToHardware(); };
+            _loadTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };   // 10 colour updates per second
+            _loadTimer.Tick += (_, __) => LoadTick();
 
             BuildEffectChips();
             BuildPalette();
@@ -580,8 +585,59 @@ namespace EuclaseLight
             _saveTimer.Stop(); _saveTimer.Start();
         }
 
+        // ---------- colour follows system load (metrics from Euclase Monitor over a Corundum ring) ----------
+        private void Load_Click(object sender, RoutedEventArgs e)
+        {
+            _sentColor.Clear();
+            if (LoadBox.IsChecked == true) { _loadTimer.Start(); LoadTick(); }
+            else
+            {
+                _loadTimer.Stop();
+                LoadStatus.Text = "Off. The selected effect is applied again.";
+                if (_connected) ApplyToHardware();   // back to the normal effect
+            }
+            _saveTimer.Stop(); _saveTimer.Start();
+        }
+
+        private void LoadSource_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            _sentColor.Clear();
+            _saveTimer.Stop(); _saveTimer.Start();
+        }
+
+        private static readonly string[] LoadNames = { "CPU", "GPU", "GPU temp", "RAM" };
+
+        private void LoadTick()
+        {
+            int src = Math.Max(0, LoadSource.SelectedIndex);
+            if (Native.ql_monitor_read(_load) != 1)
+            {
+                LoadStatus.Text = "Waiting for Euclase Monitor (start it; ring export is on by default).";
+                return;
+            }
+            double unit = Native.ql_load_unit(src, _load);
+            if (unit < 0) { LoadStatus.Text = $"Euclase Monitor does not report {LoadNames[src]} on this PC."; return; }
+            double raw = _load[src];
+            string shown = src == 2 ? $"{raw:0} C" : $"{raw:0}%";
+            if (!_connected) { LoadStatus.Text = $"{LoadNames[src]} {shown}. Connect OpenRGB to drive the lights."; return; }
+            int sent = 0, failed = 0;
+            foreach (var d in Targets())
+            {
+                uint rgb = Native.ql_lerp_color(unit, d.Settings.Color1, d.Settings.Color2);
+                foreach (int idx in d.OrgbIdx)
+                {
+                    if (_sentColor.TryGetValue(idx, out var prev) && prev == rgb) continue;   // unchanged: nothing to send
+                    if (Native.ql_orgb_set_color(idx, rgb) == 1) { _sentColor[idx] = rgb; sent++; }
+                    else failed++;
+                }
+            }
+            LoadStatus.Text = $"{LoadNames[src]} {shown}" + (failed > 0 ? $"  -  {failed} device(s) have no Direct mode: {Native.OrgbError()}" : "");
+        }
+
         public void Shutdown()
         {
+            _loadTimer.Stop();
             _connectTimer?.Stop();
             Native.ql_orgb_disconnect();
         }
@@ -592,6 +648,8 @@ namespace EuclaseLight
             public bool Sync { get; set; } = true;
             public bool AutoApply { get; set; }
             public string OpenRgbPath { get; set; } = "";
+            public bool LoadMode { get; set; }
+            public int LoadSource { get; set; }
             public Dictionary<string, EffectSettings> Devices { get; set; } = new Dictionary<string, EffectSettings>();
             public Dictionary<string, string> Images { get; set; } = new Dictionary<string, string>();
         }
@@ -618,6 +676,9 @@ namespace EuclaseLight
                 SyncBox.IsChecked = st.Sync;
                 AutoBox.IsChecked = st.AutoApply;
                 _openRgbPath = st.OpenRgbPath ?? "";
+                LoadSource.SelectedIndex = Math.Clamp(st.LoadSource, 0, 3);
+                LoadBox.IsChecked = st.LoadMode;
+                if (st.LoadMode) _loadTimer.Start();
             }
             catch (Exception ex) { Debug.WriteLine("settings load failed: " + ex.Message); }  // corrupt file -> defaults
         }
@@ -627,7 +688,8 @@ namespace EuclaseLight
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-                var st = new SavedState { Sync = SyncBox.IsChecked == true, AutoApply = AutoBox.IsChecked == true, OpenRgbPath = _openRgbPath };
+                var st = new SavedState { Sync = SyncBox.IsChecked == true, AutoApply = AutoBox.IsChecked == true, OpenRgbPath = _openRgbPath,
+                                          LoadMode = LoadBox.IsChecked == true, LoadSource = Math.Max(0, LoadSource.SelectedIndex) };
                 foreach (var kv in _savedSettings) st.Devices[kv.Key] = kv.Value;   // keep settings of devices not present right now
                 foreach (var d in _devices) { st.Devices[d.Id] = d.Settings; _savedSettings[d.Id] = d.Settings; }
                 foreach (var kv in _savedImages) st.Images[kv.Key] = kv.Value;

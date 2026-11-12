@@ -257,6 +257,7 @@ void OpenRgbClient::disconnect() {
     devs_.clear();
     savedActive_.clear();
     savedMode_.clear();
+    directMode_.clear();
 }
 
 bool OpenRgbClient::send(uint32_t dev, uint32_t id, const std::vector<uint8_t>& payload) {
@@ -295,6 +296,7 @@ bool OpenRgbClient::setMode(size_t dev, int modeIdx, const OrgbMode& m) {
 
 int OpenRgbClient::apply(size_t dev, const EffectParams& p, bool* approx) {
     if (!connected() || dev >= devs_.size()) { fail("bad device"); return -1; }
+    if (dev < directMode_.size()) directMode_[dev] = -1;   // a hardware effect replaces the live colour mode
     bool ap = false;
     const OrgbDevice& d = devs_[dev];
     const int idx = chooseOrgbMode(d, p.type, ap);
@@ -340,7 +342,38 @@ bool OpenRgbClient::restore(size_t dev) {
     if (!connected() || dev >= devs_.size() || savedActive_[dev] < 0) return false;
     const bool ok = setMode(dev, savedActive_[dev], savedMode_[dev]);
     if (ok) savedActive_[dev] = -1;
+    if (dev < directMode_.size()) directMode_[dev] = -1;
     return ok;
+}
+
+bool OpenRgbClient::setColor(size_t dev, Rgb c) {
+    if (!connected() || dev >= devs_.size()) return fail("bad device");
+    const OrgbDevice& d = devs_[dev];
+    if (d.ledCount == 0) return fail("device reports no LEDs");
+    if (directMode_.size() != devs_.size()) directMode_.assign(devs_.size(), -1);
+    if (directMode_[dev] < 0) {
+        int idx = -1;
+        for (size_t i = 0; i < d.modes.size() && idx < 0; ++i) {
+            std::string n = d.modes[i].name;
+            for (auto& ch : n) ch = char(tolower((unsigned char)ch));
+            if (n == "direct") idx = int(i);
+        }
+        for (size_t i = 0; i < d.modes.size() && idx < 0; ++i) if (d.modes[i].colorMode == 1) idx = int(i);   // any per-LED mode
+        if (idx < 0) return fail("device has no per-LED (Direct) mode");
+        if (savedActive_[dev] < 0) {   // remember the original state once, for restore()
+            savedActive_[dev] = d.activeMode;
+            savedMode_[dev] = d.modes[size_t(std::max(0, std::min(d.activeMode, int(d.modes.size()) - 1)))];
+        }
+        if (!setMode(dev, idx, d.modes[size_t(idx)])) return false;
+        directMode_[dev] = idx;
+    }
+    std::vector<uint8_t> pl;
+    pl.reserve(10 + 4 * d.ledCount);
+    put32(pl, uint32_t(4 + 2 + 4 * d.ledCount));
+    put16(pl, uint16_t(d.ledCount));
+    const uint32_t v = uint32_t(c.r) | uint32_t(c.g) << 8 | uint32_t(c.b) << 16;
+    for (uint32_t i = 0; i < d.ledCount; ++i) put32(pl, v);
+    return send(uint32_t(dev), PKT_UPDATELEDS, pl);
 }
 
 #else
@@ -351,6 +384,7 @@ bool OpenRgbClient::recv(uint32_t, std::vector<uint8_t>&) { return false; }
 bool OpenRgbClient::setMode(size_t, int, const OrgbMode&) { return false; }
 int OpenRgbClient::apply(size_t, const EffectParams&, bool*) { return -1; }
 bool OpenRgbClient::restore(size_t) { return false; }
+bool OpenRgbClient::setColor(size_t, Rgb) { return false; }
 #endif
 
 }  // namespace ql

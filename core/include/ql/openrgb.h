@@ -61,6 +61,9 @@ public:
     int apply(size_t dev, const EffectParams& p, bool* approx = nullptr);
     // Puts the device back into the mode/colours it had when we first touched it.
     bool restore(size_t dev);
+    // Shows one solid colour, live: switches the device to its per-LED ("Direct") mode once, then only
+    // sends LED colours. Meant to be called many times per second. Returns false if the device has no such mode.
+    bool setColor(size_t dev, Rgb c);
 
 private:
     bool send(uint32_t dev, uint32_t id, const std::vector<uint8_t>& payload);
@@ -73,6 +76,7 @@ private:
     std::vector<OrgbDevice> devs_;
     std::vector<int> savedActive_;           // per device, -1 = untouched
     std::vector<OrgbMode> savedMode_;
+    std::vector<int> directMode_;            // per device: mode index set by setColor, -1 = not in direct mode
     std::string err_;
 };
 
